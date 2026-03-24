@@ -1,121 +1,133 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [pokemon, setPokemon] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedPokemon, setSelectedPokemon] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchPokemon = async () => {
+      const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=50");
+      const data = await res.json();
+
+      const details = await Promise.all(
+        data.results.map((poke: any) =>
+          fetch(poke.url).then((res) => res.json())
+        )
+      );
+
+      setPokemon(details);
+    };
+
+    fetchPokemon();
+  }, []);
+
+  const filteredPokemon = pokemon.filter((poke) =>
+    poke.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getTypeColor = (type: string) => {
+    const colors: any = {
+      fire: "#f08030",
+      water: "#6890f0",
+      grass: "#78c850",
+      electric: "#f8d030",
+      psychic: "#f85888",
+      ice: "#98d8d8",
+      dragon: "#7038f8",
+      dark: "#705848",
+      fairy: "#ee99ac",
+      normal: "#a8a878",
+      fighting: "#c03028",
+      flying: "#a890f0",
+      poison: "#a040a0",
+      ground: "#e0c068",
+      rock: "#b8a038",
+      bug: "#a8b820",
+      ghost: "#705898",
+      steel: "#b8b8d0",
+    };
+
+    return colors[type] || "#ccc";
+  };
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+      <div className="container">
+        <h1>Pokédex</h1>
+
+        <input
+          type="text"
+          placeholder="Buscar Pokémon..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search"
+        />
+
+        <div className="grid">
+          {filteredPokemon.map((poke) => (
+            <div
+              className="card"
+              key={poke.id}
+              onClick={() => setSelectedPokemon(poke)}
+              style={{
+                backgroundColor: getTypeColor(
+                  poke.types[0].type.name
+                ),
+              }}
+            >
+              <img
+                src={poke.sprites.front_default}
+                alt={poke.name}
+              />
+              <p>{poke.name}</p>
+              <p className="type">
+                {poke.types
+                  .map((t: any) => t.type.name)
+                  .join(", ")}
+              </p>
+            </div>
+          ))}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+      </div>
+
+      {/* 🔥 MODAL FUERA DEL CONTAINER (IMPORTANTE) */}
+      {selectedPokemon && (
+        <div
+          className="modal"
+          onClick={() => setSelectedPokemon(null)}
         >
-          Count is {count}
-        </button>
-      </section>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>{selectedPokemon.name}</h2>
 
-      <div className="ticks"></div>
+            <img
+              src={selectedPokemon.sprites.front_default}
+              alt={selectedPokemon.name}
+            />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+            <p><strong>ID:</strong> {selectedPokemon.id}</p>
+            <p><strong>Altura:</strong> {selectedPokemon.height}</p>
+            <p><strong>Peso:</strong> {selectedPokemon.weight}</p>
+
+            <p>
+              <strong>Tipos:</strong>{" "}
+              {selectedPokemon.types
+                .map((t: any) => t.type.name)
+                .join(", ")}
+            </p>
+
+            <button onClick={() => setSelectedPokemon(null)}>
+              Cerrar
+            </button>
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
